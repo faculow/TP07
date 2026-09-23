@@ -1,0 +1,40 @@
+@model TP_05.Models.Usuarios
+@{
+    ViewData["Title"] = "Red Social";
+}
+<div class="text-center">
+    <h1 class="display-4">Bienvenido al Campus Escolar</h1>
+    <p class="lead">Has iniciado sesión correctamente como <strong>@ViewBag.Usuario</strong>.</p>
+</div>
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Página privada del alumno</h2>
+        </div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Id</dt>
+                <dd class="col-sm-9">@Model.Id</dd>
+
+                <dt class="col-sm-3">Nombre</dt>
+                <dd class="col-sm-9">@Model.Nombre</dd>
+
+                <dt class="col-sm-3">Apellido</dt>
+                <dd class="col-sm-9">@Model.Apellido</dd>
+
+                <dt class="col-sm-3">Nombre de usuario</dt>
+                <dd class="col-sm-9">@Model.NombreUsuario</dd>
+
+                <dt class="col-sm-3">Tipo de usuario</dt>
+                <dd class="col-sm-9">@Model.TipoUsuario</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <form asp-action="CerrarSesion" asp-controller="Home" method="post">
+            <button type="submit" class="btn btn-secondary">Cerrar Sesión</button>
+        </form>
+    </div>
+</div>
