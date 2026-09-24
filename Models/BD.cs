@@ -5,7 +5,7 @@ using TP07.Models;
 namespace TP07.Models;
 
 public class BD{
-    //Conexion a la base de datos
+    
     private string _connectionString = @"Server=localhost;Database=TP07;
     Integrated Security=True;TrustServerCertificate=True;";
 
