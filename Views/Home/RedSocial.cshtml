@@ -1,35 +1,48 @@
-@model TP_05.Models.Usuarios
 @{
     ViewData["Title"] = "Red Social";
 }
 <div class="text-center">
-    <h1 class="display-4">Bienvenido al Campus Escolar</h1>
+    <h1 class="display-4">Bienvenido a la Red Social</h1>
     <p class="lead">Has iniciado sesión correctamente como <strong>@ViewBag.Usuario</strong>.</p>
 </div>
 
 <div class="container mt-4">
     <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <h2 class="mb-0">Página privada del alumno</h2>
+            <a asp-action="CrearPublicacion" asp-controller="Home" class="btn btn-light">Crear publicación</a>
         </div>
         <div class="card-body">
             <dl class="row mb-0">
-                <dt class="col-sm-3">Id</dt>
-                <dd class="col-sm-9">@Model.Id</dd>
-
-                <dt class="col-sm-3">Nombre</dt>
-                <dd class="col-sm-9">@Model.Nombre</dd>
-
-                <dt class="col-sm-3">Apellido</dt>
-                <dd class="col-sm-9">@Model.Apellido</dd>
-
                 <dt class="col-sm-3">Nombre de usuario</dt>
-                <dd class="col-sm-9">@Model.NombreUsuario</dd>
-
-                <dt class="col-sm-3">Tipo de usuario</dt>
-                <dd class="col-sm-9">@Model.TipoUsuario</dd>
+                <dd class="col-sm-9">@ViewBag.NombreUsuario</dd>
             </dl>
         </div>
+    </div>
+
+    <div class="mt-4">
+        <h3>Publicaciones</h3>
+
+        @if (ViewBag.Publicaciones != null)
+        {
+            foreach (var publicacion in ViewBag.Publicaciones)
+            {
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="mb-0">@publicacion.Titulo</h5>
+                            <small class="text-muted">@publicacion.FechaPublicacion</small>
+                        </div>
+
+                        <p class="mb-2"><strong>Usuario:</strong> @publicacion.IdUsuario</p>
+
+                        <img src="@publicacion.Imagen" alt="Imagen de la publicación" class="img-fluid mb-3" style="max-height: 400px; object-fit: cover; width: 100%; border-radius: 8px;" />
+
+                        <p>@publicacion.Descripcion</p>
+                    </div>
+                </div>
+            }
+        }
     </div>
 
     <div class="mt-3">

@@ -3,13 +3,11 @@
     const apellido = document.getElementById('apellido').value;
     const usuario = document.getElementById('usuario').value;
     const contrasena = document.getElementById('contrasena').value;
-    const tipoUsuario = document.getElementById('tipoUsuario').value;
 
     document.getElementById('err-nombre').innerHTML = '';
     document.getElementById('err-apellido').innerHTML = '';
     document.getElementById('err-usuario').innerHTML = '';
     document.getElementById('err-contrasena').innerHTML = '';
-    document.getElementById('err-tipoUsuario').innerHTML = '';
 
     let ok = true;
 
@@ -33,10 +31,6 @@
         ok = false;
     }
 
-    if (tipoUsuario === '') {
-        document.getElementById('err-tipoUsuario').innerHTML = 'Seleccione un tipo de usuario.';
-        ok = false;
-    }
 
     if (ok) {
         return true;

@@ -11,9 +11,22 @@ public class BD{
 
 
     public void AgregarUsuario(Usuarios usuario){
-        string query = "INSERT INTO Usuarios (NombreUsuario, Contraseña, Nombre, Apellido, TipoUsuario) VALUES (@pNombreUsuario, @pContraseña, @pNombre, @pApellido, @pTipoUsuario)";
+        string query = "INSERT INTO Usuarios (NombreUsuario, Contraseña, Nombre, Apellido) VALUES (@pNombreUsuario, @pContraseña, @pNombre, @pApellido)";
         using(SqlConnection connection = new SqlConnection(_connectionString)){
-            connection.Execute(query, new { pNombreUsuario = usuario.NombreUsuario, pContraseña = usuario.Contraseña, pNombre = usuario.Nombre, pApellido = usuario.Apellido, pTipoUsuario = usuario.TipoUsuario });
+            connection.Execute(query, new { pNombreUsuario = usuario.NombreUsuario, pContraseña = usuario.Contraseña, pNombre = usuario.Nombre, pApellido = usuario.Apellido});
+        }
+    }
+
+    public void AgregarPublicacion(Publicaciones publicacion){
+        string query = "INSERT INTO Publicaciones (IdUsuario, Titulo, Descripcion, Imagen, FechaPublicacion) VALUES (@pIdUsuario, @pTitulo, @pDescripcion, @pImagen, @pFechaPublicacion)";
+        using(SqlConnection connection = new SqlConnection(_connectionString)){
+            connection.Execute(query, new {
+                pIdUsuario = publicacion.IdUsuario,
+                pTitulo = publicacion.Titulo,
+                pDescripcion = publicacion.Descripcion,
+                pImagen = publicacion.Imagen,
+                pFechaPublicacion = publicacion.FechaPublicacion
+            });
         }
     }
 
@@ -51,6 +64,24 @@ public class BD{
             usuario = connection.QueryFirstOrDefault<Usuarios>(query, new { pNombreUsuario = nombreUsuario, pContraseña = contrasena });
         }
         return usuario;
+    }
+
+    public List<Publicaciones> ObtenerPublicacionesRecientes(){
+        List<Publicaciones> publicaciones = new List<Publicaciones>();
+        using(SqlConnection connection = new SqlConnection(_connectionString)){
+            string query = "SELECT * FROM Publicaciones ORDER BY FechaPublicacion DESC";
+            publicaciones = connection.Query<Publicaciones>(query).ToList();
+        }
+        return publicaciones;
+    }
+
+    public List<Publicaciones> ObtenerPublicacionesPorUsuario(int idUsuario){
+        List<Publicaciones> publicaciones = new List<Publicaciones>();
+        using(SqlConnection connection = new SqlConnection(_connectionString)){
+            string query = "SELECT * FROM Publicaciones WHERE IdUsuario = @pIdUsuario ORDER BY FechaPublicacion DESC";
+            publicaciones = connection.Query<Publicaciones>(query, new { pIdUsuario = idUsuario }).ToList();
+        }
+        return publicaciones;
     }
 
 }
