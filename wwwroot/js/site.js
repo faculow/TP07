@@ -80,3 +80,7 @@ function comentar(publicacionId) {
         console.error('Error al comentar:', error);
     });
 }
+
+//Funcion que permite ver mas publicaciones de un blog, al hacer clic en el boton de "Ver más" se debe enviar una solicitud GET al servidor para obtener mas publicaciones y actualizar la lista de publicaciones en la interfaz de usuario sin recargar la página. Primer stint de publicaciones, se tienen que ver 10 publicaciones, al hacer clic en el boton de "Ver más" se deben cargar 10 publicaciones mas y asi sucesivamente hasta que no haya mas publicaciones que mostrar.
+
+let paginaActual = 1;
