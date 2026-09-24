@@ -69,7 +69,11 @@ public class BD{
     public List<Publicaciones> ObtenerPublicacionesRecientes(){
         List<Publicaciones> publicaciones = new List<Publicaciones>();
         using(SqlConnection connection = new SqlConnection(_connectionString)){
-            string query = "SELECT * FROM Publicaciones ORDER BY FechaPublicacion DESC";
+            string query = @"SELECT p.Id, p.IdUsuario, p.Titulo, p.Descripcion, p.Imagen, p.FechaPublicacion,
+                            u.NombreUsuario
+                            FROM Publicaciones p
+                            INNER JOIN Usuarios u ON u.Id = p.IdUsuario
+                            ORDER BY p.FechaPublicacion DESC";
             publicaciones = connection.Query<Publicaciones>(query).ToList();
         }
         return publicaciones;

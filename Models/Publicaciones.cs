@@ -10,5 +10,6 @@ public class Publicaciones
     public string Descripcion { get; set; }
     public string Imagen { get; set; }
     public DateTime FechaPublicacion { get; set; }
+    public string NombreUsuario { get; set; }
     public IFormFile? ImagenArchivo { get; set; }
 }
