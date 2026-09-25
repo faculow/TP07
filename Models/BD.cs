@@ -128,7 +128,7 @@ public class BD{
     {
         using (SqlConnection db = new SqlConnection(_connectionString))
         {
-            string sql = "SELECT COUNT(*) FROM PublicacionesMeGusta WHERE IdPublicacion = @idPublicacion";
+            string sql = "SELECT COUNT(*) FROM PublicacionesMeGusta WHERE [IdPublicación] = @idPublicacion";
             return db.ExecuteScalar<int>(sql, new { idPublicacion });
         }
     }
@@ -137,10 +137,10 @@ public class BD{
     {
         using (SqlConnection db = new SqlConnection(_connectionString))
         {
-            string sqlInsert = "INSERT INTO PublicacionesMeGusta (IdPublicacion, IdUsuario) VALUES (@idPublicacion, @idUsuario)";
+            string sqlInsert = "INSERT INTO PublicacionesMeGusta ([IdPublicación], IdUsuario) VALUES (@idPublicacion, @idUsuario)";
             db.Execute(sqlInsert, new { idPublicacion, idUsuario });
 
-            string sqlCount = "SELECT COUNT(*) FROM PublicacionesMeGusta WHERE IdPublicacion = @idPublicacion";
+            string sqlCount = "SELECT COUNT(*) FROM PublicacionesMeGusta WHERE [IdPublicación] = @idPublicacion";
             return db.ExecuteScalar<int>(sqlCount, new { idPublicacion });
         }
     }
@@ -149,7 +149,7 @@ public class BD{
     {
         using (SqlConnection db = new SqlConnection(_connectionString))
         {
-            string sql = "SELECT * FROM Comentarios WHERE IdPublicacion = @idPublicacion";
+            string sql = "SELECT Id, IdPublicacion, IdUsuarioComenta, Texto, FechaComentario FROM Comentarios WHERE IdPublicacion = @idPublicacion";
             return db.Query<Comentarios>(sql, new { idPublicacion }).ToList();
         }
     }
@@ -158,7 +158,7 @@ public class BD{
     {
         using (SqlConnection db = new SqlConnection(_connectionString))
         {
-            string sql = "INSERT INTO Comentarios (IdPublicacion, IdUsuario, Contenido) VALUES (@idPublicacion, @idUsuario, @contenido)";
+            string sql = "INSERT INTO Comentarios (IdPublicacion, IdUsuarioComenta, Texto, FechaComentario) VALUES (@idPublicacion, @idUsuario, @contenido, GETDATE())";
             db.Execute(sql, new { idPublicacion, idUsuario, contenido });
         }
     }
