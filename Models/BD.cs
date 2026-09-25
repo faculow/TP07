@@ -87,5 +87,80 @@ public class BD{
         }
         return publicaciones;
     }
+    
+    public int DarMeGusta(int idPublicacion)
+    {
+        int likesActuales = 0;
+        using (SqlConnection db = new SqlConnection(_connectionString))
+        {
+            string sql = "UPDATE Publicaciones SET MeGusta = ISNULL(MeGusta, 0) + 1 WHERE Id = @id; " +
+                        "SELECT MeGusta FROM Publicaciones WHERE Id = @id;";
+            likesActuales = db.ExecuteScalar<int>(sql, new { id = idPublicacion });
+        }
+        return likesActuales;
+    }
+
+    public void AgregarComentario(int idPublicacion, string contenido)
+    {
+        using (SqlConnection db = new SqlConnection(_connectionString))
+        {
+            string sql = "INSERT INTO Comentarios (IdPublicacion, Contenido) VALUES (@idPublicacion, @contenido)";
+            db.Execute(sql, new { idPublicacion, contenido });
+        }
+    }
+
+    public List<Publicaciones> ObtenerPublicacionesPaginadas(int pagina)
+    {
+        List<Publicaciones> lista = new List<Publicaciones>();
+        int limite = 10;
+        int offset = (pagina - 1) * limite;
+
+        using (SqlConnection db = new SqlConnection(_connectionString))
+        {
+            string sql = "SELECT * FROM Publicaciones ORDER BY FechaPublicacion DESC " +
+                        "OFFSET @offset ROWS FETCH NEXT @limite ROWS ONLY";
+            lista = db.Query<Publicaciones>(sql, new { offset, limite }).ToList();
+        }
+        return lista;
+    }
+
+    public int ObtenerCantidadMeGusta(int idPublicacion)
+    {
+        using (SqlConnection db = new SqlConnection(_connectionString))
+        {
+            string sql = "SELECT COUNT(*) FROM PublicacionesMeGusta WHERE IdPublicacion = @idPublicacion";
+            return db.ExecuteScalar<int>(sql, new { idPublicacion });
+        }
+    }
+
+    public int DarMeGusta(int idPublicacion, int idUsuario)
+    {
+        using (SqlConnection db = new SqlConnection(_connectionString))
+        {
+            string sqlInsert = "INSERT INTO PublicacionesMeGusta (IdPublicacion, IdUsuario) VALUES (@idPublicacion, @idUsuario)";
+            db.Execute(sqlInsert, new { idPublicacion, idUsuario });
+
+            string sqlCount = "SELECT COUNT(*) FROM PublicacionesMeGusta WHERE IdPublicacion = @idPublicacion";
+            return db.ExecuteScalar<int>(sqlCount, new { idPublicacion });
+        }
+    }
+
+    public List<Comentarios> ObtenerComentarios(int idPublicacion)
+    {
+        using (SqlConnection db = new SqlConnection(_connectionString))
+        {
+            string sql = "SELECT * FROM Comentarios WHERE IdPublicacion = @idPublicacion";
+            return db.Query<Comentarios>(sql, new { idPublicacion }).ToList();
+        }
+    }
+
+    public void AgregarComentario(int idPublicacion, int idUsuario, string contenido)
+    {
+        using (SqlConnection db = new SqlConnection(_connectionString))
+        {
+            string sql = "INSERT INTO Comentarios (IdPublicacion, IdUsuario, Contenido) VALUES (@idPublicacion, @idUsuario, @contenido)";
+            db.Execute(sql, new { idPublicacion, idUsuario, contenido });
+        }
+    }
 
 }

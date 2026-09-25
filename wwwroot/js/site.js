@@ -1,86 +1,85 @@
-﻿function validarFormulario() {
-    const nombre = document.getElementById('nombre').value;
-    const apellido = document.getElementById('apellido').value;
-    const usuario = document.getElementById('usuario').value;
-    const contrasena = document.getElementById('contrasena').value;
-
-    document.getElementById('err-nombre').innerHTML = '';
-    document.getElementById('err-apellido').innerHTML = '';
-    document.getElementById('err-usuario').innerHTML = '';
-    document.getElementById('err-contrasena').innerHTML = '';
-
-    let ok = true;
-
-    if (nombre.length < 2) {
-        document.getElementById('err-nombre').innerHTML = 'Ingrese un nombre válido.';
-        ok = false;
-    }
-
-    if (apellido.length < 2) {
-        document.getElementById('err-apellido').innerHTML = 'Ingrese un apellido válido.';
-        ok = false;
-    }
-
-    if (usuario.length < 4) {
-        document.getElementById('err-usuario').innerHTML = 'El usuario debe tener al menos 4 caracteres.';
-        ok = false;
-    }
-
-    if (contrasena.length < 6) {
-        document.getElementById('err-contrasena').innerHTML = 'La contraseña debe tener al menos 6 caracteres.';
-        ok = false;
-    }
-
-
-    if (ok) {
-        return true;
-    }
-
-    return false;
-}
-//Usando fetch necesito que se pueda dar me gusta en las publicaciones de un blog. Cuando el usuario haga clic en el botón de "Me gusta", se debe enviar una solicitud POST al servidor para registrar el "Me gusta" y actualizar el contador de "Me gusta" en la interfaz de usuario sin recargar la página.
-
-function darMeGusta(publicacionId) {
-    fetch(`/publicaciones/${publicacionId}/me-gusta`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        }
+﻿function darMeGusta(publicacionId) {
+    fetch(`/Home/DarMeGusta?id=${publicacionId}`, {
+        method: 'POST'
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) throw new Error('Error al dar me gusta');
+        return response.json();
+    })
     .then(data => {
-        // Actualizar el contador de "Me gusta" en la interfaz de usuario
         document.getElementById(`me-gusta-${publicacionId}`).textContent = data.meGusta;
     })
-    .catch(error => {
-        console.error('Error al dar "Me gusta":', error);
-    });
+    .catch(error => console.error('Error:', error));
 }
-
-//Funcion que perimite comentar una publicacion de un blog, al hacer clic en el boton de "Comentar" se debe enviar una solicitud POST al servidor para registrar el comentario y actualizar la lista de comentarios en la interfaz de usuario sin recargar la página.
 
 function comentar(publicacionId) {
-    const comentario = document.getElementById(`comentario-${publicacionId}`).value;
-    fetch(`/publicaciones/${publicacionId}/comentarios`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ contenido: comentario })
+    const input = document.getElementById(`comentario-${publicacionId}`);
+    const contenido = input.value;
+
+    if (!contenido.trim()) return;
+
+    fetch(`/Home/Comentar?id=${publicacionId}&contenido=${encodeURIComponent(contenido)}`, {
+        method: 'POST'
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) throw new Error('Error al comentar');
+        return response.json();
+    })
     .then(data => {
-        // Actualizar la lista de comentarios en la interfaz de usuario
         const listaComentarios = document.getElementById(`comentarios-${publicacionId}`);
         listaComentarios.innerHTML += `<li>${data.contenido}</li>`;
-        // Limpiar el campo de texto
-        document.getElementById(`comentario-${publicacionId}`).value = '';
+        input.value = '';
     })
-    .catch(error => {
-        console.error('Error al comentar:', error);
-    });
+    .catch(error => console.error('Error:', error));
 }
 
-//Funcion que permite ver mas publicaciones de un blog, al hacer clic en el boton de "Ver más" se debe enviar una solicitud GET al servidor para obtener mas publicaciones y actualizar la lista de publicaciones en la interfaz de usuario sin recargar la página. Primer stint de publicaciones, se tienen que ver 10 publicaciones, al hacer clic en el boton de "Ver más" se deben cargar 10 publicaciones mas y asi sucesivamente hasta que no haya mas publicaciones que mostrar.
-
 let paginaActual = 1;
+const limite = 10;
+
+function cargarMasPublicaciones() {
+    const siguientePagina = paginaActual + 1;
+    const btnVerMas = document.getElementById('btn-ver-mas');
+
+    fetch(`/Home/ObtenerPublicaciones?pagina=${siguientePagina}`)
+    .then(response => {
+        if (!response.ok) throw new Error('Error al obtener publicaciones');
+        return response.json();
+    })
+    .then(publicaciones => {
+        const contenedor = document.getElementById('contenedor-publicaciones');
+
+        if (publicaciones && publicaciones.length > 0) {
+            publicaciones.forEach(pub => {
+                const id = pub.id || pub.Id;
+                const titulo = pub.titulo || pub.Titulo;
+                const descripcion = pub.descripcion || pub.Descripcion;
+                const meGusta = pub.meGusta !== undefined ? pub.meGusta : (pub.MeGusta || 0);
+
+                const article = document.createElement('article');
+                article.classList.add('publicacion');
+                article.style.cssText = "border: 1px solid #ccc; margin-bottom: 15px; padding: 10px;";
+                article.innerHTML = `
+                    <h3>${titulo}</h3>
+                    <p>${descripcion}</p>
+                    <div style="margin-top: 10px;">
+                        <span id="me-gusta-${id}">${meGusta}</span> Me gusta
+                        <button type="button" onclick="darMeGusta(${id})">Me gusta</button>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <ul id="comentarios-${id}"></ul>
+                        <input type="text" id="comentario-${id}" placeholder="Escribe un comentario...">
+                        <button type="button" onclick="comentar(${id})">Comentar</button>
+                    </div>
+                `;
+                contenedor.appendChild(article);
+            });
+
+            paginaActual = siguientePagina;
+        }
+
+        if (!publicaciones || publicaciones.length < limite) {
+            if (btnVerMas) btnVerMas.style.display = 'none';
+        }
+    })
+    .catch(error => console.error('Error al cargar más publicaciones:', error));
+}

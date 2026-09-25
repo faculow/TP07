@@ -1,53 +1,50 @@
 @{
     ViewData["Title"] = "Red Social";
 }
-<div class="text-center">
-    <h1 class="display-4">Bienvenido a la Red Social</h1>
-    <p class="lead">Has iniciado sesión correctamente como <strong>@ViewBag.Usuario</strong>.</p>
-</div>
 
-<div class="container mt-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h2 class="mb-0">Página privada del alumno</h2>
-            <a asp-action="CrearPublicacion" asp-controller="Home" class="btn btn-light">Crear publicación</a>
-        </div>
-        <div class="card-body">
-            <dl class="row mb-0">
-                <dt class="col-sm-3">Nombre de usuario</dt>
-                <dd class="col-sm-9">@ViewBag.NombreUsuario</dd>
-            </dl>
-        </div>
-    </div>
+<h2>Bienvenido, @ViewBag.Nombre</h2>
 
-    <div class="mt-4">
-        <h3>Publicaciones</h3>
-
-        @if (ViewBag.Publicaciones != null)
+<div id="contenedor-publicaciones">
+    @if (ViewBag.Publicaciones != null)
+    {
+        @foreach (var publicacion in ViewBag.Publicaciones)
         {
-            foreach (var publicacion in ViewBag.Publicaciones)
-            {
-                <div class="card mb-3 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h5 class="mb-0">@publicacion.Titulo</h5>
-                            <small class="text-muted">@publicacion.FechaPublicacion</small>
-                        </div>
+            <article class="publicacion" style="border: 1px solid #ccc; margin-bottom: 15px; padding: 10px;">
+                <h3>@publicacion.Titulo</h3>
+                <p>@publicacion.Descripcion</p>
 
-                        <p class="mb-2"><strong>Usuario:</strong> @publicacion.NombreUsuario</p>
+                @if (!string.IsNullOrEmpty(publicacion.Imagen))
+                {
+                    <img src="@publicacion.Imagen" alt="Imagen publicación" style="max-width: 300px;" />
+                }
 
-                        <img src="@publicacion.Imagen" alt="Imagen de la publicación" class="img-fluid mb-3" style="max-height: 400px; object-fit: cover; width: 100%; border-radius: 8px;" />
-
-                        <p>@publicacion.Descripcion</p>
-                    </div>
+                <!-- Me gusta -->
+                <div style="margin-top: 10px;">
+                    <span id="me-gusta-@publicacion.Id">@(ViewBag.Likes != null && ViewBag.Likes.ContainsKey(publicacion.Id) ? ViewBag.Likes[publicacion.Id] : 0)</span> Me gusta
+                    <button type="button" onclick="darMeGusta(@publicacion.Id)">Me gusta</button>
                 </div>
-            }
-        }
-    </div>
 
-    <div class="mt-3">
-        <form asp-action="CerrarSesion" asp-controller="Home" method="post">
-            <button type="submit" class="btn btn-secondary">Cerrar Sesión</button>
-        </form>
-    </div>
+                <!-- Comentarios -->
+                <div style="margin-top: 10px;">
+                    <ul id="comentarios-@publicacion.Id">
+                        @if (ViewBag.Comentarios != null && ViewBag.Comentarios.ContainsKey(publicacion.Id))
+                        {
+                            @foreach (var com in ViewBag.Comentarios[publicacion.Id])
+                            {
+                                <li>@com.Contenido</li>
+                            }
+                        }
+                    </ul>
+                    <input type="text" id="comentario-@publicacion.Id" placeholder="Escribe un comentario..." />
+                    <button type="button" onclick="comentar(@publicacion.Id)">Comentar</button>
+                </div>
+            </article>
+        }
+    }
 </div>
+
+<div style="text-align: center; margin: 20px;">
+    <button id="btn-ver-mas" onclick="cargarMasPublicaciones()">Ver más</button>
+</div>
+
+<script src="~/js/site.js"></script>

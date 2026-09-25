@@ -92,28 +92,31 @@ public class HomeController : Controller
 
     public IActionResult RedSocial(){
         string usuario = HttpContext.Session.GetString("usuario");
+    if (usuario == null) return RedirectToAction("Login");
 
-        if (usuario == null){
-           return RedirectToAction("Login");
-        }
+    BD bd = new BD();
+    Usuarios usuarioActual = bd.ObtenerUsuarioPorNombre(usuario);
+    if (usuarioActual == null) return RedirectToAction("Login");
 
-        BD bd = new BD();
-        Usuarios usuarioActual = bd.ObtenerUsuarioPorNombre(usuario);
+    ViewBag.Id = usuarioActual.Id;
+    ViewBag.Nombre = usuarioActual.Nombre;
 
-        if (usuarioActual == null){
-            return RedirectToAction("Login");
-        }
+    List<Publicaciones> publicaciones = bd.ObtenerPublicacionesPaginadas(1);
 
-        ViewBag.Id = usuarioActual.Id;
-        ViewBag.Nombre = usuarioActual.Nombre;
-        ViewBag.Apellido = usuarioActual.Apellido;
-        ViewBag.NombreUsuario = usuarioActual.NombreUsuario;
-        ViewBag.Usuario = usuarioActual.Nombre;
+    Dictionary<int, int> likes = new Dictionary<int, int>();
+    Dictionary<int, List<Comentarios>> comentarios = new Dictionary<int, List<Comentarios>>();
 
-        List<Publicaciones> publicaciones = bd.ObtenerPublicacionesRecientes();
-        ViewBag.Publicaciones = publicaciones;
+    foreach (var publicacion in publicaciones)
+    {
+        likes[publicacion.Id] = bd.ObtenerCantidadMeGusta(publicacion.Id);
+        comentarios[publicacion.Id] = bd.ObtenerComentarios(publicacion.Id);
+    }
 
-        return View();
+    ViewBag.Publicaciones = publicaciones;
+    ViewBag.Likes = likes;
+    ViewBag.Comentarios = comentarios;
+
+    return View();
     }
 
     public IActionResult CrearPublicacion(){
@@ -193,6 +196,32 @@ public class HomeController : Controller
     public IActionResult CerrarSesion(){
         HttpContext.Session.Clear();
         return RedirectToAction("Index");
+    }
+
+    [HttpPost]
+    public IActionResult DarMeGusta(int id)
+    {
+        BD bd = new BD();
+        int meGustaActuales = bd.DarMeGusta(id); 
+
+        return Json(new { meGusta = meGustaActuales });
+    }
+
+    [HttpPost]
+    public IActionResult Comentar(int id, string contenido)
+    {
+        BD bd = new BD();
+        bd.AgregarComentario(id, contenido);
+
+        return Json(new { contenido = contenido });
+    }
+
+    public IActionResult ObtenerPublicaciones(int pagina)
+    {
+        BD bd = new BD();
+        List<Publicaciones> lista = bd.ObtenerPublicacionesPaginadas(pagina);
+
+        return Json(lista);
     }
 
 }
