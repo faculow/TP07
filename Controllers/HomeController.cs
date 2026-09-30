@@ -115,7 +115,7 @@ public class HomeController : Controller
     ViewBag.Publicaciones = publicaciones;
     ViewBag.Likes = likes;
     ViewBag.Comentarios = comentarios;
-
+    ViewBag.MisLikes = bd.ObtenerLikesDelUsuario(usuarioActual.Id);
     return View();
     }
 
@@ -201,27 +201,60 @@ public class HomeController : Controller
     [HttpPost]
     public IActionResult DarMeGusta(int id)
     {
+        string usuario = HttpContext.Session.GetString("usuario");
+        if (string.IsNullOrEmpty(usuario)) {
+            return Unauthorized();
+        }
         BD bd = new BD();
-        int meGustaActuales = bd.DarMeGusta(id); 
+        Usuarios usuarioActual = bd.ObtenerUsuarioPorNombre(usuario);
+        if (usuarioActual == null){
+            return BadRequest("Usuario no encontrado");
+        }
 
-        return Json(new { meGusta = meGustaActuales });
+        int nuevosLikes = bd.DarMeGusta(id, usuarioActual.Id);
+        return Json(new { meGusta = nuevosLikes });
     }
 
     [HttpPost]
     public IActionResult Comentar(int id, string contenido)
     {
+        string usuario = HttpContext.Session.GetString("usuario");
+        if (string.IsNullOrEmpty(usuario)){
+            return Unauthorized();
+        }
         BD bd = new BD();
-        bd.AgregarComentario(id, contenido);
-
+        Usuarios usuarioActual = bd.ObtenerUsuarioPorNombre(usuario);
+        if (usuarioActual == null){
+            return BadRequest("Usuario no encontrado");
+        }
+        bd.AgregarComentario(id, usuarioActual.Id, contenido);
         return Json(new { contenido = contenido });
     }
 
     public IActionResult ObtenerPublicaciones(int pagina)
     {
-        BD bd = new BD();
-        List<Publicaciones> lista = bd.ObtenerPublicacionesPaginadas(pagina);
+        string usuario = HttpContext.Session.GetString("usuario");
+    if (string.IsNullOrEmpty(usuario)) return Unauthorized();
 
-        return Json(lista);
+    BD bd = new BD();
+    Usuarios usuarioActual = bd.ObtenerUsuarioPorNombre(usuario);
+    if (usuarioActual == null) return Unauthorized();
+
+    List<Publicaciones> publicaciones = bd.ObtenerPublicacionesPaginadas(pagina);
+    List<int> misLikes = bd.ObtenerLikesDelUsuario(usuarioActual.Id);
+
+    var resultado = publicaciones.Select(p => new
+    {
+        id = p.Id,
+        titulo = p.Titulo,
+        descripcion = p.Descripcion,
+        imagen = p.Imagen, // Envía la ruta de la imagen correctamente
+        cantidadLikes = bd.ObtenerCantidadMeGusta(p.Id),
+        leDioLike = misLikes.Contains(p.Id),
+        comentarios = bd.ObtenerComentarios(p.Id).Select(c => new { texto = c.Texto })
+    });
+
+    return Json(resultado);
     }
 
 }

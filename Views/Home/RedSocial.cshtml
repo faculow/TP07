@@ -2,7 +2,17 @@
     ViewData["Title"] = "Red Social";
 }
 
-<h2>Bienvenido, @ViewBag.Nombre</h2>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2>Bienvenido, @ViewBag.Nombre</h2>
+    <a asp-controller="Home" asp-action="CrearPublicacion" class="btn btn-primary" style="padding: 10px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">
+        + Crear Publicación
+    </a>
+    <form asp-controller="Home" asp-action="CerrarSesion" method="post" style="display: inline;">
+    <button type="submit" class="btn-cerrar-sesion">
+        Cerrar Sesión
+    </button>
+</form>
+</div>
 
 <div id="contenedor-publicaciones">
     @if (ViewBag.Publicaciones != null)
@@ -18,13 +28,16 @@
                     <img src="@publicacion.Imagen" alt="Imagen publicación" style="max-width: 300px;" />
                 }
 
-                <!-- Me gusta -->
                 <div style="margin-top: 10px;">
                     <span id="me-gusta-@publicacion.Id">@(ViewBag.Likes != null && ViewBag.Likes.ContainsKey(publicacion.Id) ? ViewBag.Likes[publicacion.Id] : 0)</span> Me gusta
-                    <button type="button" onclick="darMeGusta(@publicacion.Id)">Me gusta</button>
+                    <button id="btn-like-@publicacion.Id" 
+                        type="button" 
+                        class="btn-like @(ViewBag.MisLikes != null && ((List<int>)ViewBag.MisLikes).Contains((int)publicacion.Id) ? "active" : "")" 
+                        onclick="darMeGusta(@publicacion.Id)">
+                        ♥ Me gusta
+                    </button>
                 </div>
 
-                <!-- Comentarios -->
                 <div style="margin-top: 10px;">
                     <ul id="comentarios-@publicacion.Id">
                         @if (ViewBag.Comentarios != null && ViewBag.Comentarios.ContainsKey(publicacion.Id))

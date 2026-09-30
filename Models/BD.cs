@@ -48,14 +48,7 @@ public class BD{
         return usuario;
     }
 
-    public Usuarios ObtenerUsuarioPorNombre(string nombreUsuario){
-        Usuarios usuario = null;
-        string query = "SELECT TOP 1 * FROM Usuarios WHERE NombreUsuario = @pNombreUsuario";
-        using(SqlConnection connection = new SqlConnection(_connectionString)){
-            usuario = connection.QueryFirstOrDefault<Usuarios>(query, new { pNombreUsuario = nombreUsuario });
-        }
-        return usuario;
-    }
+    
 
     public Usuarios ObtenerUsuario(string nombreUsuario, string contrasena){
         Usuarios usuario = null;
@@ -111,39 +104,54 @@ public class BD{
 
     public List<Publicaciones> ObtenerPublicacionesPaginadas(int pagina)
     {
-        List<Publicaciones> lista = new List<Publicaciones>();
-        int limite = 10;
-        int offset = (pagina - 1) * limite;
+        int registrosPorPagina = 10;
+    int offset = (pagina - 1) * registrosPorPagina;
 
-        using (SqlConnection db = new SqlConnection(_connectionString))
-        {
-            string sql = "SELECT * FROM Publicaciones ORDER BY FechaPublicacion DESC " +
-                        "OFFSET @offset ROWS FETCH NEXT @limite ROWS ONLY";
-            lista = db.Query<Publicaciones>(sql, new { offset, limite }).ToList();
-        }
-        return lista;
+    using (SqlConnection db = new SqlConnection(_connectionString))
+    {
+        string sql = @"SELECT Id, IdUsuario, Titulo, Descripcion, Imagen, FechaPublicacion 
+                       FROM Publicaciones 
+                       ORDER BY FechaPublicacion DESC 
+                       OFFSET @offset ROWS FETCH NEXT @registrosPorPagina ROWS ONLY";
+
+        return db.Query<Publicaciones>(sql, new { offset, registrosPorPagina }).ToList();
+    }
     }
 
-    public int ObtenerCantidadMeGusta(int idPublicacion)
+    // Obtener cantidad de Likes de una publicación
+public int ObtenerCantidadMeGusta(int idPublicacion)
+{
+    using (SqlConnection db = new SqlConnection(_connectionString))
     {
-        using (SqlConnection db = new SqlConnection(_connectionString))
-        {
-            string sql = "SELECT COUNT(*) FROM PublicacionesMeGusta WHERE [IdPublicación] = @idPublicacion";
-            return db.ExecuteScalar<int>(sql, new { idPublicacion });
-        }
+        string sql = "SELECT COUNT(*) FROM PublicacionesMeGusta WHERE [IdPublicación] = @idPublicacion";
+        return db.ExecuteScalar<int>(sql, new { idPublicacion });
     }
+}
 
-    public int DarMeGusta(int idPublicacion, int idUsuario)
+// Dar/Quitar Me Gusta
+public int DarMeGusta(int idPublicacion, int idUsuario)
+{
+    using (SqlConnection db = new SqlConnection(_connectionString))
     {
-        using (SqlConnection db = new SqlConnection(_connectionString))
+        string sqlExiste = "SELECT COUNT(*) FROM PublicacionesMeGusta WHERE [IdPublicación] = @idPublicacion AND IdUsuario = @idUsuario";
+        int existe = db.ExecuteScalar<int>(sqlExiste, new { idPublicacion, idUsuario });
+
+        if (existe == 0)
         {
             string sqlInsert = "INSERT INTO PublicacionesMeGusta ([IdPublicación], IdUsuario) VALUES (@idPublicacion, @idUsuario)";
             db.Execute(sqlInsert, new { idPublicacion, idUsuario });
-
-            string sqlCount = "SELECT COUNT(*) FROM PublicacionesMeGusta WHERE [IdPublicación] = @idPublicacion";
-            return db.ExecuteScalar<int>(sqlCount, new { idPublicacion });
         }
+        else
+        {
+            string sqlDelete = "DELETE FROM PublicacionesMeGusta WHERE [IdPublicación] = @idPublicacion AND IdUsuario = @idUsuario";
+            db.Execute(sqlDelete, new { idPublicacion, idUsuario });
+        }
+
+        string sqlCount = "SELECT COUNT(*) FROM PublicacionesMeGusta WHERE [IdPublicación] = @idPublicacion";
+        return db.ExecuteScalar<int>(sqlCount, new { idPublicacion });
     }
+}
+
 
     public List<Comentarios> ObtenerComentarios(int idPublicacion)
     {
@@ -163,4 +171,20 @@ public class BD{
         }
     }
 
+    public Usuarios ObtenerUsuarioPorNombre(string usuario)
+    {
+        using (SqlConnection db = new SqlConnection(_connectionString))
+        {
+            string sql = "SELECT * FROM Usuarios WHERE NombreUsuario = @usuario OR Nombre = @usuario";
+            return db.QueryFirstOrDefault<Usuarios>(sql, new { usuario });
+        }
+    }
+    public List<int> ObtenerLikesDelUsuario(int idUsuario)
+    {
+        using (SqlConnection db = new SqlConnection(_connectionString))
+        {
+            string sql = "SELECT [IdPublicación] FROM PublicacionesMeGusta WHERE IdUsuario = @idUsuario";
+            return db.Query<int>(sql, new { idUsuario }).ToList();
+        }
+    }
 }

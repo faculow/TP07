@@ -1,85 +1,106 @@
 ﻿function darMeGusta(publicacionId) {
+    const btn = document.getElementById(`btn-like-${publicacionId}`);
+    const span = document.getElementById(`me-gusta-${publicacionId}`);
+
     fetch(`/Home/DarMeGusta?id=${publicacionId}`, {
         method: 'POST'
     })
     .then(response => {
-        if (!response.ok) throw new Error('Error al dar me gusta');
+        if (!response.ok) throw new Error('Error en el servidor');
         return response.json();
     })
     .then(data => {
-        document.getElementById(`me-gusta-${publicacionId}`).textContent = data.meGusta;
+        if (span) span.textContent = data.meGusta;
+
+        if (btn) {
+            btn.classList.toggle('active');
+        }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => console.error('Error al dar me gusta:', error));
 }
 
 function comentar(publicacionId) {
     const input = document.getElementById(`comentario-${publicacionId}`);
-    const contenido = input.value;
+    if (!input) return;
 
-    if (!contenido.trim()) return;
+    const contenido = input.value.trim();
+    if (!contenido) return;
 
     fetch(`/Home/Comentar?id=${publicacionId}&contenido=${encodeURIComponent(contenido)}`, {
         method: 'POST'
     })
     .then(response => {
-        if (!response.ok) throw new Error('Error al comentar');
+        if (!response.ok) throw new Error('Error al enviar comentario');
         return response.json();
     })
     .then(data => {
         const listaComentarios = document.getElementById(`comentarios-${publicacionId}`);
-        listaComentarios.innerHTML += `<li>${data.contenido}</li>`;
-        input.value = '';
+        if (listaComentarios) {
+            listaComentarios.innerHTML += `<li>${data.contenido}</li>`;
+        }
+        input.value = ''; // Limpia la caja de texto
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => console.error('Error al comentar:', error));
 }
 
 let paginaActual = 1;
-const limite = 10;
 
 function cargarMasPublicaciones() {
-    const siguientePagina = paginaActual + 1;
-    const btnVerMas = document.getElementById('btn-ver-mas');
+    paginaActual++;
 
-    fetch(`/Home/ObtenerPublicaciones?pagina=${siguientePagina}`)
+    fetch(`/Home/ObtenerPublicaciones?pagina=${paginaActual}`)
     .then(response => {
-        if (!response.ok) throw new Error('Error al obtener publicaciones');
+        if (!response.ok) throw new Error('Error al cargar publicaciones');
         return response.json();
     })
     .then(publicaciones => {
         const contenedor = document.getElementById('contenedor-publicaciones');
 
-        if (publicaciones && publicaciones.length > 0) {
-            publicaciones.forEach(pub => {
-                const id = pub.id || pub.Id;
-                const titulo = pub.titulo || pub.Titulo;
-                const descripcion = pub.descripcion || pub.Descripcion;
-                const meGusta = pub.meGusta !== undefined ? pub.meGusta : (pub.MeGusta || 0);
-
-                const article = document.createElement('article');
-                article.classList.add('publicacion');
-                article.style.cssText = "border: 1px solid #ccc; margin-bottom: 15px; padding: 10px;";
-                article.innerHTML = `
-                    <h3>${titulo}</h3>
-                    <p>${descripcion}</p>
-                    <div style="margin-top: 10px;">
-                        <span id="me-gusta-${id}">${meGusta}</span> Me gusta
-                        <button type="button" onclick="darMeGusta(${id})">Me gusta</button>
-                    </div>
-                    <div style="margin-top: 10px;">
-                        <ul id="comentarios-${id}"></ul>
-                        <input type="text" id="comentario-${id}" placeholder="Escribe un comentario...">
-                        <button type="button" onclick="comentar(${id})">Comentar</button>
-                    </div>
-                `;
-                contenedor.appendChild(article);
-            });
-
-            paginaActual = siguientePagina;
-        }
-
-        if (!publicaciones || publicaciones.length < limite) {
+        if (!publicaciones || publicaciones.length === 0) {
+            const btnVerMas = document.getElementById('btn-ver-mas');
             if (btnVerMas) btnVerMas.style.display = 'none';
+            return;
         }
+
+        publicaciones.forEach(pub => {
+            // Renderiza la imagen si existe
+            const HTMLImagen = pub.imagen ? `<img src="${pub.imagen}" alt="Imagen publicación" style="max-width: 300px;" />` : '';
+
+            let HTMLComentarios = '';
+            if (pub.comentarios && pub.comentarios.length > 0) {
+                pub.comentarios.forEach(com => {
+                    HTMLComentarios += `<li>${com.texto}</li>`;
+                });
+            }
+
+            const postHtml = `
+                <article class="publicacion" style="border: 1px solid #ccc; margin-bottom: 15px; padding: 10px;">
+                    <h3>${pub.titulo}</h3>
+                    <p>${pub.descripcion}</p>
+                    ${HTMLImagen}
+
+                    <div style="margin-top: 10px;">
+                        <span id="me-gusta-${pub.id}">${pub.cantidadLikes}</span> Me gusta
+                        <button id="btn-like-${pub.id}" 
+                                type="button" 
+                                class="btn-like ${pub.leDioLike ? 'active' : ''}" 
+                                onclick="darMeGusta(${pub.id})">
+                            ♥ Me gusta
+                        </button>
+                    </div>
+
+                    <div style="margin-top: 10px;">
+                        <ul id="comentarios-${pub.id}">
+                            ${HTMLComentarios}
+                        </ul>
+                        <input type="text" id="comentario-${pub.id}" placeholder="Escribe un comentario..." />
+                        <button type="button" onclick="comentar(${pub.id})">Comentar</button>
+                    </div>
+                </article>
+            `;
+
+            contenedor.insertAdjacentHTML('beforeend', postHtml);
+        });
     })
     .catch(error => console.error('Error al cargar más publicaciones:', error));
 }
